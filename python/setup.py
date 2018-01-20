@@ -2,8 +2,17 @@ from setuptools import setup
 from setuptools.extension import Extension
 from setuptools.command.build_ext import build_ext
 
+import subprocess, os
 
 class cython_build_ext(build_ext):
+    def run(self):
+        wd = os.getcwd()
+        os.chdir('..')
+        subprocess.check_output(['cmake', '.'])
+        subprocess.check_output(['make'])
+        os.chdir(wd)
+        return build_ext.run(self)
+
     def finalize_options(self):
         if self.distribution.ext_modules:
             nthreads = getattr(self, 'parallel', None)  # -j option in Py3.5+
