@@ -15,11 +15,13 @@ cdef extern from "stdlib.h":
     void free(void *ptr)
 
 cdef extern from "Python.h":
-    object PyString_FromStringAndSize(char *s, Py_ssize_t len)
+    object PyBytes_FromStringAndSize(char *s, Py_ssize_t len)
 
 cdef extern from "squish.h" namespace "squish":
     void CompressImage(unsigned char* rgba, int width, int height,
-            void* blocks, int flags, float *metric = 0)
+            void* blocks, int flags, float *metric)
+    void CompressImage(unsigned char* rgba, int width, int height,
+            void* blocks, int flags)
     void DecompressImage(unsigned char *rgba, int width, int height,
             void *blocks, int flags)
     int GetStorageRequirements(int width, int height, int flags)
@@ -113,7 +115,7 @@ def compressImage(bytes rgba, int width, int height, int flags):
     CompressImage(buf_rgba, width, height, data, flags)
 
     try:
-        result = PyString_FromStringAndSize(<char *>data, datasize)
+        result = PyBytes_FromStringAndSize(<char *>data, datasize)
     finally:
         free(data)
 
@@ -159,7 +161,7 @@ def decompressImage(bytes blocks, int width, int height, int flags):
     DecompressImage(<unsigned char *>data, width, height, buf_blocks, flags)
 
     try:
-        result = PyString_FromStringAndSize(<char *>data, datasize)
+        result = PyBytes_FromStringAndSize(<char *>data, datasize)
     finally:
         free(data)
 

@@ -1,10 +1,29 @@
-from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Distutils import build_ext
+from setuptools import setup
+from setuptools.extension import Extension
+from setuptools.command.build_ext import build_ext
 
+import subprocess, os
+
+class cython_build_ext(build_ext):
+    def run(self):
+        wd = os.getcwd()
+        os.chdir('..')
+        subprocess.check_output(['cmake', '.'])
+        subprocess.check_output(['make'])
+        os.chdir(wd)
+        return build_ext.run(self)
+
+    def finalize_options(self):
+        if self.distribution.ext_modules:
+            nthreads = getattr(self, 'parallel', None)  # -j option in Py3.5+
+            nthreads = int(nthreads) if nthreads else None
+            from Cython.Build.Dependencies import cythonize
+            self.distribution.ext_modules[:] = cythonize(
+                self.distribution.ext_modules, nthreads=nthreads, force=self.force)
+        build_ext.finalize_options(self)
 
 cmdclass = {
-    'build_ext': build_ext
+    'build_ext': cython_build_ext
 }
 
 ext = Extension(
@@ -27,4 +46,5 @@ setup(
     description='Python binding for libsquish',
     ext_modules=[ext],
     cmdclass=cmdclass,
+    setup_requires=['Cython']
 )
